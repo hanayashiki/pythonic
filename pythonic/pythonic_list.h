@@ -60,7 +60,6 @@ namespace pythonic
 
 		explicit list(std::initializer_list<init_elem> il) 
 		{
-			std::cout << "use this" << std::endl;
 			for (auto & elem : il)
 			{
 				switch (elem.type)

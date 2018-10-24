@@ -1,0 +1,6 @@
+#include "pythonic.h"
+
+int main()
+{
+	return 0;
+}
