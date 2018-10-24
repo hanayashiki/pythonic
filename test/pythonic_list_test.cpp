@@ -1,7 +1,6 @@
 #include "pch.h"
 
-#include "../pythonic/pythonic_list.h"
-#include "../pythonic/pythonic.h"
+#include "../release/pythonic.h"
 #include <iostream>
 #include <string>
 
