@@ -8,6 +8,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{F1CAC9F7-45AD-436A-B6C8-46D01D5EA727}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "release", "release\release.vcxproj", "{23063A2C-0DC0-4226-BC33-B1F7A73AAEE6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0213298A-1E1B-4D69-B30D-4733822920FC} = {0213298A-1E1B-4D69-B30D-4733822920FC}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

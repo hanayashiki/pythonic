@@ -72,6 +72,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,12 +85,14 @@
     <CustomBuildStep>
       <Command>
       </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>python3 .\header_combine.py --directory ../pythonic  --target ../pythonic/pythonic.h --output pythonic.h</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Form one single pythonic.h</Message>
+      <Message>Generate combined pythonic.h</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -129,6 +132,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\pythonic\pythonic.h" />
     <ClInclude Include="header_combine.py">
       <FileType>Text</FileType>
     </ClInclude>
@@ -136,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="example.cpp" />
+    <ClCompile Include="force_rebuild.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
