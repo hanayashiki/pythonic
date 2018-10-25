@@ -158,6 +158,7 @@
     <ClInclude Include="pythonic_elem_value.h" />
     <ClInclude Include="pythonic_iterator.h" />
     <ClInclude Include="pythonic_list.h" />
+    <ClInclude Include="pythonic_str.h" />
     <ClInclude Include="pythonic_utils_match.h" />
     <ClInclude Include="pythonic_utils_range.h" />
   </ItemGroup>

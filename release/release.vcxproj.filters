@@ -21,9 +21,15 @@
     <ClInclude Include="pythonic.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\pythonic\pythonic.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="example.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="force_rebuild.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

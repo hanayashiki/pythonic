@@ -8,7 +8,7 @@
 
 void list_test_init()
 {
-	test_utils::tester t("list_test_init");
+	test_utils::tester t(__FUNCTION__);
 
 	using namespace pythonic;
 	list my_list({ 1, 2, "abc", std::string("efg")});
@@ -35,7 +35,7 @@ void list_test_init()
 
 void list_test_append_extend()
 {
-	test_utils::tester t("list_test_append_extend");
+	test_utils::tester t(__FUNCTION__);
 
 	using namespace pythonic;
 	list my_list({ 1, 2, "abc", std::string("efg") });
@@ -73,7 +73,7 @@ void list_test_append_extend()
 
 void list_test_equal()
 {
-	test_utils::tester t("list_test_equal");
+	test_utils::tester t(__FUNCTION__);
 
 	using namespace pythonic;
 	list my_list1, my_list2;
@@ -106,7 +106,7 @@ void list_test_equal()
 
 void list_test_insert()
 {
-	test_utils::tester t("list_test_insert");
+	test_utils::tester t(__FUNCTION__);
 
 	using namespace pythonic;
 
@@ -125,7 +125,7 @@ void list_test_insert()
 
 void list_test_slice()
 {
-	test_utils::tester t("list_test_slice");
+	test_utils::tester t(__FUNCTION__);
 
 	using namespace pythonic;
 

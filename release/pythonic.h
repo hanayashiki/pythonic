@@ -358,6 +358,12 @@ namespace pythonic
 	{
 		return match(std::forward<container::elem_t&>(elem), std::function(funcs)...);
 	}
+
+	template<typename ...Funcs>
+	static auto match(container::elem_t && elem, Funcs &&... funcs)
+	{
+		return match(std::forward<container::elem_t&>(elem), std::function(funcs)...);
+	}
 	
 	template<typename R, typename ...ArgTypes, typename NonVoidRet = ret_or_dummy<R>>
 	static
@@ -560,7 +566,6 @@ namespace pythonic
 
 		explicit list(std::initializer_list<init_elem> il) 
 		{
-			std::cout << "use this" << std::endl;
 			for (auto & elem : il)
 			{
 				switch (elem.type)
