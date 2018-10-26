@@ -4,9 +4,9 @@
 #include <typeinfo>
 #include <string>
 
+#include "pythonic_basic_types.h"
 #include "pythonic_container.h"
 #include "pythonic_utils_match.h"
-
 
 namespace pythonic
 {
@@ -21,6 +21,12 @@ namespace pythonic
 		elem_value(Args... args) :
 			value(std::forward<Args>(args)...)
 		{
+		}
+
+		elem_value(const list & l)
+		{
+			// std::cout << "use elem_value list & l" << std::endl;
+			cont = std::dynamic_pointer_cast<container>(std::make_shared<list>(l));
 		}
 		
 		elem_value(list * c)
@@ -86,7 +92,7 @@ namespace pythonic
 		template<>
 		inline bool isinstance<const any &>() const
 		{
-			std::cout << value.type().name() << ". " << std::endl;
+			// std::cout << value.type().name() << ". " << std::endl;
 			return true;
 		}
 
@@ -95,24 +101,19 @@ namespace pythonic
 			return value;
 		}
 
+		auto & get_cont() { return cont; }
+
+		const auto & get_cont() const { return cont; }
+
 #define COMPARE(type) [=](type t) { \
-			std::cerr << "comparing: " << as<type>() << ", " << that.as<type>() << std::endl;\
 			return as<type>() == that.as<type>(); \
 		}
 
 		bool operator == (const elem_value & that) const noexcept
 		{
-			auto that0 = remove_const(that);
 			return match(
-				that0,
-				COMPARE(int8_t), COMPARE(int16_t), COMPARE(int32_t), COMPARE(int64_t),
-				COMPARE(int8_t*), COMPARE(int16_t*), COMPARE(int32_t*), COMPARE(int64_t*),
-				COMPARE(uint16_t), COMPARE(uint32_t), COMPARE(uint32_t), COMPARE(uint64_t),
-				COMPARE(uint16_t*), COMPARE(uint32_t*), COMPARE(uint32_t*), COMPARE(uint64_t*),
-				COMPARE(char), COMPARE(char16_t), COMPARE(char32_t), COMPARE(wchar_t),
-				COMPARE(char*), COMPARE(char16_t*), COMPARE(char32_t*), COMPARE(wchar_t*),
-
-				COMPARE(std::string), 
+				that,
+				BASIC_TYPES_LIST(COMPARE)
 
 				[=](const any & t)
 				{

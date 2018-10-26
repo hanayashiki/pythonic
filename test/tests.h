@@ -7,3 +7,5 @@ void list_test_insert();
 void list_test_slice();
 
 void match_test();
+
+void str_test_init();

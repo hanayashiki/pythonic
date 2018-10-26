@@ -1,24 +1,50 @@
 #include "pythonic.h"
+#include <vector>
 #include <iostream>
+
+struct F
+{
+	int a;
+	F()
+	{
+		a = 0;
+		std::cout << "F built" << std::endl;
+	}
+
+	F(F&)
+	{
+		std::cout << "F lcopy" << std::endl;
+	}
+
+	~F()
+	{
+		std::cout << "F destroyed" << std::endl;
+	}
+};
+
+void Fuck1(F f)
+{
+	f.a = 1;
+	std::cout << f.a << std::endl;
+	std::cout << "Fuck 1 called" << std::endl;
+}
+
+void Fuck2(F && f)
+{
+	std::cout << "Fuck 2 called" << std::endl;
+}
 
 
 int main()
 {
-	pythonic::list l({ 1 });
-	pythonic::any elem(1);
+	using namespace pythonic;
 
-	match(l[0],
-	[](int a) {
-		std::cout << a;
-	}
-	);
+	list l({ 1, 2, 3, 
+		list{ 1, "2", 3, 
+			list{ "fuck", "you", "leatherman" } } });
 
-	match(pythonic::any(1),
-		[](int a) {
-		std::cout << a;
-	}
-	);
+	std::cout << str(l);
 
-
+	std::cin.get();
 	return 0;
 }

@@ -165,7 +165,13 @@
     </ClCompile>
     <ClCompile Include="pythonic_list_test.cpp" />
     <ClCompile Include="pythonic_list_match.cpp" />
+    <ClCompile Include="pythonic_str_test.cpp" />
     <ClCompile Include="test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\release\release.vcxproj">
+      <Project>{23063a2c-0dc0-4226-bc33-b1f7a73aaee6}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

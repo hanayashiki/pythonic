@@ -133,6 +133,7 @@ namespace pythonic
 namespace pythonic
 {
 	class elem_value;
+	class str;
 
 	class container
 	{
@@ -142,10 +143,9 @@ namespace pythonic
 
 		virtual bool __equal__(const container & that) const noexcept = 0;
 		virtual size_t __len__() const noexcept = 0;
+		virtual str __str__() const noexcept = 0;
 
-		virtual iterator begin() noexcept = 0;
 		virtual const_iterator begin() const noexcept = 0;
-		virtual iterator end() noexcept = 0;
 		virtual const_iterator end() const noexcept = 0;
 
 		bool operator == (const container & container) const
@@ -262,16 +262,16 @@ namespace pythonic
 
 		template<bool isVoid>
 		static inline NonVoidRet match_first
-		(elem_t & elem, std::function<Ret(First)> && first, bool & success);
+		(const elem_t & elem, std::function<Ret(First)> && first, bool & success);
 
 		template<>
 		static inline NonVoidRet match_first<false>
-			(elem_t & elem, std::function<Ret(First)> && first, bool & success)
+			(const elem_t & elem, std::function<Ret(First)> && first, bool & success)
 		{
 			if (elem.isinstance<First>())
 			{
 				success = true;
-				return first(elem.asMut<First>());
+				return first(elem.as<First>());
 			}
 			else
 			{
@@ -281,13 +281,13 @@ namespace pythonic
 
 		template<>
 		static inline NonVoidRet match_first<true>
-			(elem_t & elem, std::function<Ret(First)> && first, bool & success)
+			(const elem_t & elem, std::function<Ret(First)> && first, bool & success)
 		{
 
 			if (elem.isinstance<First>())
 			{
 				success = true;
-				first(elem.asMut<First>());
+				first(elem.as<First>());
 			}
 			return NonVoidRet();
 		}
@@ -302,12 +302,12 @@ namespace pythonic
 		typedef match_impl_base<std::function<Ret(First)>> _Base;
 		typedef typename _Base::NonVoidRet NonVoidRet;
 
-		static NonVoidRet match(_Base::elem_t & elem, std::function<Ret(First)> && function)
+		static NonVoidRet match(const _Base::elem_t & elem, std::function<Ret(First)> && function)
 		{
 			bool success = false;
 			
 			NonVoidRet result = _Base::match_first<std::is_void_v<Ret>>(
-				std::forward<typename _Base::elem_t&>(elem),
+				std::forward<const typename _Base::elem_t&>(elem),
 				std::forward<std::function<Ret(First)>>(function), 
 				success);
 			if (success)
@@ -328,11 +328,11 @@ namespace pythonic
 		typedef match_impl_base<std::function<Ret(First)>> _Base;
 		typedef typename _Base::NonVoidRet NonVoidRet;
 
-		static NonVoidRet match(_Base::elem_t & elem, std::function<Ret(First)> && function, Rest &&... rest)
+		static NonVoidRet match(const _Base::elem_t & elem, std::function<Ret(First)> && function, Rest &&... rest)
 		{
 			bool success = false;
 			NonVoidRet result = _Base::match_first<std::is_void_v<Ret>>(
-				std::forward<typename _Base::elem_t&>(elem),
+				std::forward<const typename _Base::elem_t&>(elem),
 				std::forward<std::function<Ret(First)>>(function), 
 				success);
 			if (success)
@@ -341,7 +341,7 @@ namespace pythonic
 			}
 			else
 			{
-				return match_impl<Rest...>::match(std::forward<typename _Base::elem_t&>(elem), std::forward<Rest>(rest)...);
+				return match_impl<Rest...>::match(std::forward<const typename _Base::elem_t&>(elem), std::forward<Rest>(rest)...);
 			}
 		}
 	};
@@ -354,24 +354,18 @@ namespace pythonic
 	
 	template<typename ...Funcs>
 	static
-	auto match(container::elem_t & elem, Funcs &&... funcs)
+	auto match(const container::elem_t & elem, Funcs &&... funcs)
 	{
-		return match(std::forward<container::elem_t&>(elem), std::function(funcs)...);
-	}
-
-	template<typename ...Funcs>
-	static auto match(container::elem_t && elem, Funcs &&... funcs)
-	{
-		return match(std::forward<container::elem_t&>(elem), std::function(funcs)...);
+		return match(std::forward<const container::elem_t&>(elem), std::function(funcs)...);
 	}
 	
 	template<typename R, typename ...ArgTypes, typename NonVoidRet = ret_or_dummy<R>>
 	static
 	NonVoidRet
-	match(container::elem_t & elem, std::function<R(ArgTypes)> &&... funcs)
+	match(const container::elem_t & elem, std::function<R(ArgTypes)> &&... funcs)
 	{
 		return match_impl<std::function<R(ArgTypes)>...>::match(
-			std::forward<container::elem_t&>(elem),
+			std::forward<const container::elem_t&>(elem),
 			std::forward<std::function<R(ArgTypes)>>(funcs)...
 		);
 	}
@@ -386,12 +380,35 @@ namespace pythonic
 #include <vector>
 #include <initializer_list>
 
+#include <cassert>
+
 
 #pragma once
 #include <any>
 #include <iostream>
 #include <typeinfo>
 #include <string>
+
+#pragma once
+
+#include <string>
+
+#define BASIC_TYPES_LIST(B)	\
+	B(int8_t), 			\
+	B(int16_t),			\
+	B(int32_t),			\
+	B(int64_t),			\
+	B(uint16_t),		\
+	B(uint32_t),		\
+	B(uint32_t),		\
+	B(uint64_t),		\
+	B(char), 			\
+	B(char16_t),		\
+	B(char32_t),		\
+	B(wchar_t),			\
+	B(char*), 			\
+	B(const char*), 	\
+	B(std::string),		\
 
 
 
@@ -410,6 +427,12 @@ namespace pythonic
 		elem_value(Args... args) :
 			value(std::forward<Args>(args)...)
 		{
+		}
+
+		elem_value(const list & l)
+		{
+			// std::cout << "use elem_value list & l" << std::endl;
+			cont = std::dynamic_pointer_cast<container>(std::make_shared<list>(l));
 		}
 		
 		elem_value(list * c)
@@ -475,7 +498,7 @@ namespace pythonic
 		template<>
 		inline bool isinstance<const any &>() const
 		{
-			std::cout << value.type().name() << ". " << std::endl;
+			// std::cout << value.type().name() << ". " << std::endl;
 			return true;
 		}
 
@@ -484,24 +507,19 @@ namespace pythonic
 			return value;
 		}
 
+		auto & get_cont() { return cont; }
+
+		const auto & get_cont() const { return cont; }
+
 #define COMPARE(type) [=](type t) { \
-			std::cerr << "comparing: " << as<type>() << ", " << that.as<type>() << std::endl;\
 			return as<type>() == that.as<type>(); \
 		}
 
 		bool operator == (const elem_value & that) const noexcept
 		{
-			auto that0 = remove_const(that);
 			return match(
-				that0,
-				COMPARE(int8_t), COMPARE(int16_t), COMPARE(int32_t), COMPARE(int64_t),
-				COMPARE(int8_t*), COMPARE(int16_t*), COMPARE(int32_t*), COMPARE(int64_t*),
-				COMPARE(uint16_t), COMPARE(uint32_t), COMPARE(uint32_t), COMPARE(uint64_t),
-				COMPARE(uint16_t*), COMPARE(uint32_t*), COMPARE(uint32_t*), COMPARE(uint64_t*),
-				COMPARE(char), COMPARE(char16_t), COMPARE(char32_t), COMPARE(wchar_t),
-				COMPARE(char*), COMPARE(char16_t*), COMPARE(char32_t*), COMPARE(wchar_t*),
-
-				COMPARE(std::string), 
+				that,
+				BASIC_TYPES_LIST(COMPARE)
 
 				[=](const any & t)
 				{
@@ -514,84 +532,225 @@ namespace pythonic
 #undef COMPARE
 }
 
+#pragma once
+
+#include <string>
+
+
+
+
+
+
+namespace std
+{
+	inline
+	std::string to_string(char * s)
+	{
+		return std::string(s);
+	}
+
+	inline
+	std::string to_string(const char * s)
+	{
+		return std::string(s);
+	}
+
+	inline
+	std::string to_string(const std::string & s)
+	{
+		return std::string(s);
+	}
+
+}
+
+namespace pythonic
+{
+	class str : public container
+	{
+	private:
+		mutable any cur_char;
+		std::string content;
+	public:
+
+		explicit str(any c)
+			: content(to_string(c))
+		{
+		}
+
+		str()
+		{
+		}
+
+		template<typename Iterable>
+		str join(const Iterable & iter)
+		{
+			// std::cerr << "Use join" << std::endl;
+			std::string s;
+			for (const auto & x : iter)
+			{
+				s += str(x).get_content();
+				s += get_content();
+			}
+			return str(s.substr(0, s.length() - len(*this)));
+		}
+
+		/* Implements __equal__ */
+		virtual bool __equal__(const container & container) const noexcept override
+		{
+			if (dynamic_cast<const str*>(&container) == nullptr)
+			{
+				return false;
+			}
+			else
+			{
+				return __len__() == container.__len__() && std::equal(begin(), end(), container.begin());
+			}
+		}
+
+		/* Implements __len__ */
+		virtual size_t __len__() const noexcept override
+		{
+			return content.size();
+		}
+
+		/* Implements __str__ */
+		virtual str __str__() const noexcept override
+		{
+			return *this;
+		}
+
+		str operator + (const str & b)
+		{
+			return str(content + b.content);
+		}
+
+		auto & get_content() { return content; }
+
+		const auto & get_content() const { return content; }
+
+		virtual const_iterator begin() const noexcept
+		{
+			return get_iter(content.begin());
+		}
+
+		virtual const_iterator end() const noexcept
+		{
+			return get_iter(content.end());
+		}
+
+	private:
+		const_iterator get_iter(const std::string::const_iterator & tg) const
+		{
+			using ContextPtr = const_iterator::ContextPtr;
+			using Iter = std::string::const_iterator;
+
+			Iter * iter = new Iter(tg);
+			ContextPtr ptr(iter);
+
+			return const_iterator(
+				[](ContextPtr ptr) -> void { iterator::visitAs<Iter>(ptr)++; },
+				[](ContextPtr ptr, const iterator & that) -> bool { return iterator::visitAs<Iter>(ptr) != iterator::visitAs<Iter>(that.get_context()); },
+				[=](ContextPtr ptr) -> const elem_value & { cur_char = any(*iterator::visitAsConst<Iter>(ptr)); return cur_char; },
+				ptr
+			);
+		}
+
+#define TO_STRING(type) [](type a){ return std::to_string(a); }
+
+		_NODISCARD static inline std::string to_string(const pythonic::any & any)
+		{
+			return match(
+				any,
+				BASIC_TYPES_LIST(TO_STRING)
+				[=](const pythonic::any & t) {
+				return t.get_cont()->__str__().get_content();
+			});
+		}
+	};
+
+}
+
+namespace std
+{
+
+	inline
+	ostream& operator<<(ostream& os, const pythonic::str& s)
+	{
+		os << s.get_content();
+		return os;
+	}
+}
 
 namespace pythonic 
-{
+{ 
+	struct init_elem;\
+
 	class list : public container
 	{
 	public:
 		typedef std::vector<elem_t> container_t;
+		// static int id;
 	private:
+		// int self_id;
 		container_t content;
 	public:
-		struct init_elem
+
+		inline explicit list(const std::initializer_list<init_elem> & il);
+
+		list(const list & l)
 		{
-			enum Type
-			{
-				Elem = 1,
-				List = 2
-			} type;
-			elem_value elem;
-			const list * l;
-
-			template<typename Any, class dummy = 
-				std::enable_if<std::is_same_v<std::remove_cv_t<
-					std::remove_reference_t<Any>>, 
-					any>>> /* Compiler cannot prefer list to Any, tell it explicitly */
-			init_elem(Any v)
-				: elem(v), type(Elem)
-			{
-			}
-
-			init_elem(list && l)
-				: l(&l), type(List)
-			{
-			}
-
-			init_elem(const list & l)
-				: l(&l), type(List)
-			{
-			}
-
-			init_elem(list & l)
-				: l(&l), type(List)
-			{
-			}
-
-			init_elem(const list && l)
-				: l(&l), type(List)
-			{
-			}
-		};
-
-		explicit list(std::initializer_list<init_elem> il) 
-		{
-			for (auto & elem : il)
-			{
-				switch (elem.type)
-				{
-				case init_elem::Elem:
-					content.push_back(elem.elem);
-					break;
-				case init_elem::List:
-					content.push_back(elem_t(new list(*(elem.l))));
-					break;	
-				}
-			}
+			//self_id = l.self_id + 1000;
+			content = l.content;
+			/*
+			std::cerr << "list id: " << self_id << std::endl;
+			std::cerr << "source id: " << l.self_id << std::endl;
+			std::cerr << "list copied, len: " << this->__len__() << std::endl;
+			*/
+			//if (self_id > 1010)
+			//	assert(this->__len__() > 0);
 		}
 
-		list(const container_t & c)
+		list(list && l)
+		{
+			//self_id = l.self_id + 1000;
+			content = std::move(l.content);
+			//std::cerr << "list id: " << self_id << std::endl;
+			//std::cerr << "source id: " << l.self_id << std::endl;
+			//std::cerr << "list moved, len: " << this->__len__() << std::endl;
+			//if (self_id > 1010)
+			//	assert(this->__len__() > 0);
+		}
+
+		list & operator = (list & l)
+		{
+			//self_id = l.self_id;
+			content = l.content;
+		}
+
+		list & operator = (list && l)
+		{
+			//self_id = l.self_id;
+			content = std::move(l.content);
+		}
+
+		explicit list(const container_t & c)
 		{
 			content = c;
 		}
 
-		list(const container_t && c)
+		explicit list(const container_t && c)
 		{
 			content = c;
 		}
 
 		list()
 		{
+		}
+
+		~list()
+		{
+			//std::cerr << "list id: " << self_id << std::endl;
+			//std::cerr << "list destroyed, len: " << this->__len__() << std::endl;
 		}
 
 		/* Implements __getitem__ */ // TODO: virtualize this func
@@ -614,7 +773,7 @@ namespace pythonic
 		/* Slicing */
 		list operator () (size_t a, size_t b)
 		{
-			return container_t(content.begin() + a, content.begin() + b);
+			return list(container_t(content.begin() + a, content.begin() + b));
 		}
 
 		list & append(const elem_t & elem)
@@ -667,8 +826,15 @@ namespace pythonic
 			return *this;
 		}
 
+		/* Implements __str__ */
+		virtual str __str__() const noexcept override
+		{
+			//std::cerr << "list id: " << self_id << std::endl;
+			//std::cerr << "__str__(): this len: " << this->__len__() << std::endl;
+			return str("[") + str(", ").join(*this) + str("]");
+		}
+
 		/* Implements __equal__ */
-		
 		virtual bool __equal__(const container & container) const noexcept override
 		{
 			if (dynamic_cast<const list*>(&container) == nullptr)
@@ -707,6 +873,63 @@ namespace pythonic
 			return const_iterator::from_const_iter(content.end());
 		}
 	};
+
+	struct init_elem
+	{
+		enum Type
+		{
+			Elem = 1,
+			List = 2
+		} type;
+		elem_value elem;
+		list l;
+
+		template<typename Any, class dummy =
+			std::enable_if<std::is_same_v<std::remove_cv_t<
+			std::remove_reference_t<Any>>,
+			any>>> /* Compiler cannot prefer list to Any, tell it explicitly */
+			init_elem(Any v)
+			: elem(v), type(Elem), l(list())
+		{
+		}
+
+		init_elem(list && l)
+			: l(std::move(l)), type(List)
+		{
+			//std::cerr << "init list len" << l.__len__() << std::endl;
+		}
+
+		init_elem(list & l)
+			: l(l), type(List)
+		{
+			//std::cerr << "init list len" << l.__len__() << std::endl;
+		}
+	};
+
+
+	list::list(const std::initializer_list<init_elem> & il)
+	{
+		//self_id = id++;
+
+		//std::cerr << "list id: " << self_id << std::endl;
+		//std::cerr << "list init begin" << std::endl;
+		for (auto & elem : il)
+		{
+			switch (elem.type)
+			{
+			case init_elem::Elem:
+				content.push_back(elem.elem);
+				break;
+			case init_elem::List:
+				content.push_back(elem_t(new list(
+					std::move(elem.l))));
+				break;
+			}
+		}
+
+		//std::cerr << "list id: " << self_id << std::endl;
+		//std::cerr << "list inited, len: " << this->__len__() << std::endl;
+	}
 }
 
 namespace pythonic
@@ -717,7 +940,7 @@ namespace pythonic
 		return container.__len__();
 	}
 
-	static list make_list(std::initializer_list<list::init_elem> il)
+	static list make_list(std::initializer_list<init_elem> il)
 	{
 		return list(il);
 	}

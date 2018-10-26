@@ -6,86 +6,82 @@
 #include <vector>
 #include <initializer_list>
 
+#include <cassert>
+
 #include "pythonic_container.h"
 #include "pythonic_elem_value.h"
+#include "pythonic_str.h"
 
 namespace pythonic 
-{
+{ 
+	struct init_elem;\
+
 	class list : public container
 	{
 	public:
 		typedef std::vector<elem_t> container_t;
+		// static int id;
 	private:
+		// int self_id;
 		container_t content;
 	public:
-		struct init_elem
+
+		inline explicit list(const std::initializer_list<init_elem> & il);
+
+		list(const list & l)
 		{
-			enum Type
-			{
-				Elem = 1,
-				List = 2
-			} type;
-			elem_value elem;
-			const list * l;
-
-			template<typename Any, class dummy = 
-				std::enable_if<std::is_same_v<std::remove_cv_t<
-					std::remove_reference_t<Any>>, 
-					any>>> /* Compiler cannot prefer list to Any, tell it explicitly */
-			init_elem(Any v)
-				: elem(v), type(Elem)
-			{
-			}
-
-			init_elem(list && l)
-				: l(&l), type(List)
-			{
-			}
-
-			init_elem(const list & l)
-				: l(&l), type(List)
-			{
-			}
-
-			init_elem(list & l)
-				: l(&l), type(List)
-			{
-			}
-
-			init_elem(const list && l)
-				: l(&l), type(List)
-			{
-			}
-		};
-
-		explicit list(std::initializer_list<init_elem> il) 
-		{
-			for (auto & elem : il)
-			{
-				switch (elem.type)
-				{
-				case init_elem::Elem:
-					content.push_back(elem.elem);
-					break;
-				case init_elem::List:
-					content.push_back(elem_t(new list(*(elem.l))));
-					break;	
-				}
-			}
+			//self_id = l.self_id + 1000;
+			content = l.content;
+			/*
+			std::cerr << "list id: " << self_id << std::endl;
+			std::cerr << "source id: " << l.self_id << std::endl;
+			std::cerr << "list copied, len: " << this->__len__() << std::endl;
+			*/
+			//if (self_id > 1010)
+			//	assert(this->__len__() > 0);
 		}
 
-		list(const container_t & c)
+		list(list && l)
+		{
+			//self_id = l.self_id + 1000;
+			content = std::move(l.content);
+			//std::cerr << "list id: " << self_id << std::endl;
+			//std::cerr << "source id: " << l.self_id << std::endl;
+			//std::cerr << "list moved, len: " << this->__len__() << std::endl;
+			//if (self_id > 1010)
+			//	assert(this->__len__() > 0);
+		}
+
+		list & operator = (list & l)
+		{
+			//self_id = l.self_id;
+			content = l.content;
+		}
+
+		list & operator = (list && l)
+		{
+			//self_id = l.self_id;
+			content = std::move(l.content);
+		}
+
+		explicit list(const container_t & c)
 		{
 			content = c;
 		}
 
-		list(const container_t && c)
+		explicit list(const container_t && c)
 		{
 			content = c;
 		}
 
 		list()
 		{
+		}
+
+		~list()
+		{
+			//std::cerr << "list id: " << self_id << std::endl;
+			//std::cerr << "list destroyed, len: " << this->__len__() << std::endl;
 		}
 
 		/* Implements __getitem__ */ // TODO: virtualize this func
@@ -108,7 +104,7 @@ namespace pythonic
 		/* Slicing */
 		list operator () (size_t a, size_t b)
 		{
-			return container_t(content.begin() + a, content.begin() + b);
+			return list(container_t(content.begin() + a, content.begin() + b));
 		}
 
 		list & append(const elem_t & elem)
@@ -161,8 +157,15 @@ namespace pythonic
 			return *this;
 		}
 
+		/* Implements __str__ */
+		virtual str __str__() const noexcept override
+		{
+			//std::cerr << "list id: " << self_id << std::endl;
+			//std::cerr << "__str__(): this len: " << this->__len__() << std::endl;
+			return str("[") + str(", ").join(*this) + str("]");
+		}
+
 		/* Implements __equal__ */
-		
 		virtual bool __equal__(const container & container) const noexcept override
 		{
 			if (dynamic_cast<const list*>(&container) == nullptr)
@@ -201,4 +204,61 @@ namespace pythonic
 			return const_iterator::from_const_iter(content.end());
 		}
 	};
+
+	struct init_elem
+	{
+		enum Type
+		{
+			Elem = 1,
+			List = 2
+		} type;
+		elem_value elem;
+		list l;
+
+		template<typename Any, class dummy =
+			std::enable_if<std::is_same_v<std::remove_cv_t<
+			std::remove_reference_t<Any>>,
+			any>>> /* Compiler cannot prefer list to Any, tell it explicitly */
+			init_elem(Any v)
+			: elem(v), type(Elem), l(list())
+		{
+		}
+
+		init_elem(list && l)
+			: l(std::move(l)), type(List)
+		{
+			//std::cerr << "init list len" << l.__len__() << std::endl;
+		}
+
+		init_elem(list & l)
+			: l(l), type(List)
+		{
+			//std::cerr << "init list len" << l.__len__() << std::endl;
+		}
+	};
+
+
+	list::list(const std::initializer_list<init_elem> & il)
+	{
+		//self_id = id++;
+
+		//std::cerr << "list id: " << self_id << std::endl;
+		//std::cerr << "list init begin" << std::endl;
+		for (auto & elem : il)
+		{
+			switch (elem.type)
+			{
+			case init_elem::Elem:
+				content.push_back(elem.elem);
+				break;
+			case init_elem::List:
+				content.push_back(elem_t(new list(
+					std::move(elem.l))));
+				break;
+			}
+		}
+
+		//std::cerr << "list id: " << self_id << std::endl;
+		//std::cerr << "list inited, len: " << this->__len__() << std::endl;
+	}
 }

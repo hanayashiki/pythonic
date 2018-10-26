@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "../release/pythonic.h"
+#include "../pythonic/pythonic.h"
 #include "tester.h"
 
 void match_test()

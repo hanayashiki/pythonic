@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "../release/pythonic.h"
+#include "../pythonic/pythonic.h"
 #include <iostream>
 #include <string>
 
@@ -94,11 +94,11 @@ void list_test_equal()
 
 	t.compare();
 
-	my_list1 = list({ 1, 2, 3, list({1, 2, 3}) });
-	my_list2 = list({ 1, 2, 3, list{1, 2, 3} });
+	list my_list3({ 1, 2, 3, list({1, 2, 3}) });
+	list my_list4({ 1, 2, 3, list{1, 2, 3} });
 
 	t.clear();
-	t.test() << (my_list1 == my_list2);
+	t.test() << (my_list3 == my_list4);
 	t.expected() << true;
 	t.compare();
 

@@ -50,8 +50,8 @@ os.chdir(args.directory)
 content = get_header_combined(args.target)
 
 os.chdir(old_path)
-file=open(args.output, 'w', encoding='utf-8')
+o = open(args.output, 'w', encoding='utf-8')
 
-print(content, file=file, end='')
-
+print(content, file=o, end='')
+o.close()
 

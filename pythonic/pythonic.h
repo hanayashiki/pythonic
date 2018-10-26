@@ -14,7 +14,7 @@ namespace pythonic
 		return container.__len__();
 	}
 
-	static list make_list(std::initializer_list<list::init_elem> il)
+	static list make_list(std::initializer_list<init_elem> il)
 	{
 		return list(il);
 	}

@@ -42,16 +42,16 @@ namespace pythonic
 
 		template<bool isVoid>
 		static inline NonVoidRet match_first
-		(elem_t & elem, std::function<Ret(First)> && first, bool & success);
+		(const elem_t & elem, std::function<Ret(First)> && first, bool & success);
 
 		template<>
 		static inline NonVoidRet match_first<false>
-			(elem_t & elem, std::function<Ret(First)> && first, bool & success)
+			(const elem_t & elem, std::function<Ret(First)> && first, bool & success)
 		{
 			if (elem.isinstance<First>())
 			{
 				success = true;
-				return first(elem.asMut<First>());
+				return first(elem.as<First>());
 			}
 			else
 			{
@@ -61,13 +61,13 @@ namespace pythonic
 
 		template<>
 		static inline NonVoidRet match_first<true>
-			(elem_t & elem, std::function<Ret(First)> && first, bool & success)
+			(const elem_t & elem, std::function<Ret(First)> && first, bool & success)
 		{
 
 			if (elem.isinstance<First>())
 			{
 				success = true;
-				first(elem.asMut<First>());
+				first(elem.as<First>());
 			}
 			return NonVoidRet();
 		}
@@ -82,12 +82,12 @@ namespace pythonic
 		typedef match_impl_base<std::function<Ret(First)>> _Base;
 		typedef typename _Base::NonVoidRet NonVoidRet;
 
-		static NonVoidRet match(_Base::elem_t & elem, std::function<Ret(First)> && function)
+		static NonVoidRet match(const _Base::elem_t & elem, std::function<Ret(First)> && function)
 		{
 			bool success = false;
 			
 			NonVoidRet result = _Base::match_first<std::is_void_v<Ret>>(
-				std::forward<typename _Base::elem_t&>(elem),
+				std::forward<const typename _Base::elem_t&>(elem),
 				std::forward<std::function<Ret(First)>>(function), 
 				success);
 			if (success)
@@ -108,11 +108,11 @@ namespace pythonic
 		typedef match_impl_base<std::function<Ret(First)>> _Base;
 		typedef typename _Base::NonVoidRet NonVoidRet;
 
-		static NonVoidRet match(_Base::elem_t & elem, std::function<Ret(First)> && function, Rest &&... rest)
+		static NonVoidRet match(const _Base::elem_t & elem, std::function<Ret(First)> && function, Rest &&... rest)
 		{
 			bool success = false;
 			NonVoidRet result = _Base::match_first<std::is_void_v<Ret>>(
-				std::forward<typename _Base::elem_t&>(elem),
+				std::forward<const typename _Base::elem_t&>(elem),
 				std::forward<std::function<Ret(First)>>(function), 
 				success);
 			if (success)
@@ -121,7 +121,7 @@ namespace pythonic
 			}
 			else
 			{
-				return match_impl<Rest...>::match(std::forward<typename _Base::elem_t&>(elem), std::forward<Rest>(rest)...);
+				return match_impl<Rest...>::match(std::forward<const typename _Base::elem_t&>(elem), std::forward<Rest>(rest)...);
 			}
 		}
 	};
@@ -134,24 +134,18 @@ namespace pythonic
 	
 	template<typename ...Funcs>
 	static
-	auto match(container::elem_t & elem, Funcs &&... funcs)
+	auto match(const container::elem_t & elem, Funcs &&... funcs)
 	{
-		return match(std::forward<container::elem_t&>(elem), std::function(funcs)...);
-	}
-
-	template<typename ...Funcs>
-	static auto match(container::elem_t && elem, Funcs &&... funcs)
-	{
-		return match(std::forward<container::elem_t&>(elem), std::function(funcs)...);
+		return match(std::forward<const container::elem_t&>(elem), std::function(funcs)...);
 	}
 	
 	template<typename R, typename ...ArgTypes, typename NonVoidRet = ret_or_dummy<R>>
 	static
 	NonVoidRet
-	match(container::elem_t & elem, std::function<R(ArgTypes)> &&... funcs)
+	match(const container::elem_t & elem, std::function<R(ArgTypes)> &&... funcs)
 	{
 		return match_impl<std::function<R(ArgTypes)>...>::match(
-			std::forward<container::elem_t&>(elem),
+			std::forward<const container::elem_t&>(elem),
 			std::forward<std::function<R(ArgTypes)>>(funcs)...
 		);
 	}
