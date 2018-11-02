@@ -45,6 +45,21 @@
     <ClInclude Include="pythonic_ordered_map.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="pythonic_dict.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pythonic_init_elem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pythonic_list_initializer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pythonic_dict_initializer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pythonic_str_impl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dummy.cpp">

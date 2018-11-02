@@ -156,11 +156,16 @@
     <ClInclude Include="pythonic.h" />
     <ClInclude Include="pythonic_basic_types.h" />
     <ClInclude Include="pythonic_container.h" />
+    <ClInclude Include="pythonic_dict.h" />
+    <ClInclude Include="pythonic_dict_initializer.h" />
+    <ClInclude Include="pythonic_init_elem.h" />
+    <ClInclude Include="pythonic_list_initializer.h" />
     <ClInclude Include="pythonic_ordered_map.h" />
     <ClInclude Include="pythonic_elem_value.h" />
     <ClInclude Include="pythonic_iterator.h" />
     <ClInclude Include="pythonic_list.h" />
     <ClInclude Include="pythonic_str.h" />
+    <ClInclude Include="pythonic_str_impl.h" />
     <ClInclude Include="pythonic_utils_match.h" />
     <ClInclude Include="pythonic_utils_range.h" />
   </ItemGroup>

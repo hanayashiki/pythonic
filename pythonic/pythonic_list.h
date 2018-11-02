@@ -14,7 +14,7 @@
 
 namespace pythonic 
 { 
-	struct init_elem;\
+	struct init_elem;
 
 	class list : public container
 	{
@@ -153,12 +153,7 @@ namespace pythonic
 		}
 
 		/* Implements __str__ */
-		virtual str __str__() const noexcept override
-		{
-			//std::cerr << "list id: " << self_id << std::endl;
-			//std::cerr << "__str__(): this len: " << this->__len__() << std::endl;
-			return str("[") + str(", ").join(*this) + str("]");
-		}
+		inline virtual str __str__() const noexcept override;
 
 		/* Implements __equal__ */
 		virtual bool __equal__(const container & container) const noexcept override
@@ -200,60 +195,4 @@ namespace pythonic
 		}
 	};
 
-	struct init_elem
-	{
-		enum Type
-		{
-			Elem = 1,
-			List = 2
-		} type;
-		elem_value elem;
-		list l;
-
-		template<typename Any, class dummy =
-			std::enable_if<std::is_same_v<std::remove_cv_t<
-			std::remove_reference_t<Any>>,
-			any>>> /* Compiler cannot prefer list to Any, tell it explicitly */
-			init_elem(Any v)
-			: elem(v), type(Elem), l(list())
-		{
-		}
-
-		init_elem(list && l)
-			: l(std::move(l)), type(List)
-		{
-			//std::cerr << "init list len" << l.__len__() << std::endl;
-		}
-
-		init_elem(list & l)
-			: l(l), type(List)
-		{
-			//std::cerr << "init list len" << l.__len__() << std::endl;
-		}
-	};
-
-
-	list::list(const std::initializer_list<init_elem> & il)
-	{
-		//self_id = id++;
-
-		//std::cerr << "list id: " << self_id << std::endl;
-		//std::cerr << "list init begin" << std::endl;
-		for (auto & elem : il)
-		{
-			switch (elem.type)
-			{
-			case init_elem::Elem:
-				content.push_back(elem.elem);
-				break;
-			case init_elem::List:
-				auto ptr = new list(std::move(elem.l));
-				content.push_back(elem_t(ptr));
-				break;
-			}
-		}
-
-		//std::cerr << "list id: " << self_id << std::endl;
-		//std::cerr << "list inited, len: " << this->__len__() << std::endl;
-	}
 }

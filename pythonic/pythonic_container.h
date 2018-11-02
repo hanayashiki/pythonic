@@ -17,7 +17,7 @@ namespace pythonic
 	{
 	protected:
 	public:
-		typedef elem_value elem_t;
+		using elem_t = ::pythonic::elem_value;
 
 		virtual bool __equal__(const container & that) const noexcept = 0;
 		virtual size_t __len__() const noexcept = 0;

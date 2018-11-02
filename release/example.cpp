@@ -45,6 +45,31 @@ void Fuck4(const int & a)
 	std::cout << "Fuck 4 called" << std::endl;
 }
 
+struct G;
+
+struct FF
+{
+	void fuck(G);
+};
+
+struct G
+{
+
+};
+
+void FF::fuck(G g)
+{
+}
+
+template<typename K>
+struct Big
+{
+	struct Small
+	{
+		K a;
+	};
+};
+
 int main()
 {
 	using namespace pythonic;
@@ -62,10 +87,22 @@ int main()
 	std::cin.get();
 
 	std::unordered_map<int, int> map;
-	map.at(3);
+//	map.at(3);
 
 	Fuck3(F());
 	Fuck4(4);
+
+	std::unordered_map<int, int> map2{
+		{ 1, 2 },
+		{ 3, 4 }
+	};
+
+	init_elem("1234");
+
+	str("12345");
+	str(123);
+	str(init_elem("1234"));
+
 
 	return 0;
 }

@@ -8,80 +8,47 @@
 
 namespace pythonic
 {
+	template<typename K, typename V, typename Compare>
+	class ordered_map_items;
+
 	template<typename K, typename V, typename Compare = std::less<K>>
 	struct ordered_map_node
 	{
-		typedef ordered_map_node<K, V> node;
-
-		class iterator
-		{
-		private:
-			node * n;
-		public:
-			typedef std::forward_iterator_tag iterator_category;
-			typedef const std::pair<const K, V> value_type;
-			typedef size_t difference_type;
-			typedef std::pair<const K, V> * pointer;
-			typedef std::pair<const K, V> & reference;
-
-			iterator(node * n)
-				: n(n)
-			{
-			}
-
-			void operator ++ () noexcept
-			{
-				n = n->next[0];
-			}
-
-			reference operator* () noexcept
-			{
-				return n->kv;
-			}
-
-			bool operator != (const iterator & that) const noexcept
-			{
-				return n != that.n;
-			}
-
-			bool operator == (const iterator & that) const noexcept
-			{
-				return !(*this != that);
-			}
-		};
+		using node = ordered_map_node<K, V>;
 
 		class const_iterator
 		{
 		private:
 			node * n;
 		public:
-			typedef std::forward_iterator_tag iterator_category;
-			typedef const std::pair<const K, V> value_type;
-			typedef size_t difference_type;
-			typedef const std::pair<const K, V> * pointer;
-			typedef const std::pair<const K, V> & reference;
+			using iterator_category = std::forward_iterator_tag;
+			using value_type = const K;
+			using difference_type = size_t;
+			using pointer = const K *;
+			using reference = const K &;
 
 			const_iterator(node * n)
 				: n(n)
 			{
 			}
 
-			void operator ++ () noexcept
+			const_iterator operator++ () noexcept
 			{
 				n = n->next[0];
+				return *this;
 			}
 
 			reference operator* () const noexcept
 			{
-				return n->kv;
+				return n->kv.first;
 			}
 
-			bool operator != (const iterator & that) const noexcept
+			bool operator != (const const_iterator & that) const noexcept
 			{
 				return n != that.n;
 			}
 
-			bool operator == (const iterator & that) const noexcept
+			bool operator == (const const_iterator & that) const noexcept
 			{
 				return !(*this != that);
 			}
@@ -149,9 +116,26 @@ namespace pythonic
 		{
 			if (mark == MinMaxMark::None)
 			{
+				std::cerr << "dtor called" << std::endl;
 				this->~ordered_map_node();
 			}
+			else
+			{
+				std::cerr << "mark: " << int(mark);
+				std::cerr << ", dtor not called" << std::endl;
+			}
 			::free(this);
+		}
+
+		void free_all()
+		{
+			node * cur = this;
+			while (cur != nullptr)
+			{
+				node * next = cur->next[0];
+				cur->free();
+				cur = next;
+			}
 		}
 
 		int key_compare(const K & key) noexcept
@@ -187,11 +171,15 @@ namespace pythonic
 	template<typename K, typename V, typename Compare = std::less<K>>
 	class ordered_map
 	{
-	private:
+	public:
 		using node = ordered_map_node<K, V, Compare>;
-		
+		using const_iterator = typename node::const_iterator;
+		using value_type = std::pair<const K, V>;
+		using size_type = size_t;
+	private:
 		node * head;
 		node * rear;
+		size_t count = 0;
 
 		size_t cur_level = 0;
 		const size_t max_level;
@@ -207,9 +195,6 @@ namespace pythonic
 		}
 
 	public:
-		using value_type = std::pair<const K, V>;
-		using size_type = size_t;
-		using iterator = typename node::iterator;
 
 		ordered_map(size_t max_level = 4) : 
 			max_level(max_level),
@@ -220,6 +205,27 @@ namespace pythonic
 			for (size_t i = 0; i <= max_level; i++)
 				head->next[i] = rear;
 		}
+
+		ordered_map(const ordered_map &) = delete;
+		ordered_map(ordered_map && map) :
+			head(map.head),
+			rear(map.rear),
+			max_level(map.max_level)
+		{
+		}
+
+		ordered_map & operator = (const ordered_map &) = delete;
+		ordered_map & operator = (ordered_map && t)
+		{
+			head->free_all();
+			head = t.head;
+			rear = t.rear;
+			t.head = nullptr;
+			t.rear = nullptr;
+			max_level = t.max_level;
+		}
+
+		size_t size() const noexcept { return count; }
 
 		ordered_map<K, V> & insert(const K & key, const V & val)
 		{
@@ -239,6 +245,7 @@ namespace pythonic
 			}
 			else
 			{
+				count++;
 				node * new_node = node::create(key, val, level);
 				for (size_t i = 0; i <= level; i++)
 				{
@@ -258,6 +265,7 @@ namespace pythonic
 
 			if (n != nullptr)
 			{
+				count--;
 				for (size_t i = 0; i < this->cur_level; i++)
 				{
 					if (prev[i]->next[i] == n)
@@ -354,25 +362,62 @@ namespace pythonic
 			return ans;
 		}
 
-		iterator begin()
+		const_iterator begin() const
 		{
-			return iterator(head->next[0]);
+			return const_iterator(head->next[0]);
 		}
 
-		iterator end()
+		const_iterator end() const
 		{
-			return iterator(rear);
+			return const_iterator(rear);
 		}
+
+		ordered_map_items<K, V, Compare> items() const noexcept;
 
 		~ordered_map()
 		{
-			node * cur = head;
-			while (cur != nullptr)
-			{
-				node * next = cur->next[0];
-				cur->free();
-				cur = next;
-			}
+			head->free_all();
 		}
 	};
+
+	template<typename K, typename V, typename Compare = std::less<K>>
+	class ordered_map_items
+	{
+		using node = ordered_map_node<K, V, Compare>;
+		node * head;
+		node * rear;
+	public:
+		ordered_map_items(node * head, node * rear) :
+			head(head), rear(rear)
+		{
+		}
+
+		class const_iterator
+		{
+		private:
+			node * n;
+		public:
+			typedef std::forward_iterator_tag iterator_category;
+			typedef const std::pair<const K, V> value_type;
+			typedef size_t difference_type;
+			typedef const std::pair<const K, V> * pointer;
+			typedef const std::pair<const K, V> & reference;
+
+			const_iterator(node * n) : n(n) {}
+
+			void operator ++ () noexcept { n = n->next[0]; }
+			reference operator* () const noexcept { return n->kv; }
+			bool operator != (const const_iterator & that) const noexcept { return n != that.n; }
+			bool operator == (const const_iterator & that) const noexcept { return !(*this != that); }
+		};
+
+		const_iterator begin() const { return const_iterator(head->next[0]); }
+		const_iterator end() const { return const_iterator(rear); }
+	};
+
+	template<typename K, typename V, typename Compare>
+	inline ordered_map_items<K, V, Compare> ordered_map<K, V, Compare>::items() const noexcept
+	{
+		return ordered_map_items<K, V, Compare>(this->head, this->rear);
+	}
 }

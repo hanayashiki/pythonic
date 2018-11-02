@@ -21,17 +21,17 @@ namespace pythonic
 		elem_value(Args... args) :
 			value(std::forward<Args>(args)...)
 		{
-		}
-
-		elem_value(const list & l)
-		{
-			// std::cout << "use elem_value list & l" << std::endl;
-			cont = std::dynamic_pointer_cast<container>(std::make_shared<list>(l));
+			std::cerr << "elem_value Use any initializer" << std::endl;
 		}
 		
-		elem_value(list * c)
+		elem_value(container * c)
 		{
+			std::cerr << "elem_value Use container initializer" << std::endl;
 			cont = std::shared_ptr<container>(reinterpret_cast<container*>(c));
+		}
+
+		elem_value(list * c) : elem_value((container*)c)
+		{
 		}
 
 		~elem_value()
@@ -113,6 +113,10 @@ namespace pythonic
 			return as<type>() == that.as<type>(); \
 		}
 
+#define LESS(type) [=](type t) { \
+			return as<type>() < that.as<type>(); \
+		}
+
 		bool operator == (const elem_value & that) const noexcept
 		{
 			return match(
@@ -122,6 +126,20 @@ namespace pythonic
 				[=](const any & t)
 				{
 					return *cont == *(t.cont);
+				}
+			);
+		}
+
+		bool operator < (const elem_value & that) const noexcept
+		{
+			return match(
+				that,
+				BASIC_TYPES_LIST(LESS)
+
+				[=](const any & t)
+				{
+					return false;
+					//return *cont < *(t.cont);
 				}
 			);
 		}

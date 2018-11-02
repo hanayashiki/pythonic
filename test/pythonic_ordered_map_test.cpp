@@ -1,5 +1,5 @@
 #include "pch.h"
-#define private public
+//#define private public
 #include "tester.h"
 #include "../pythonic/pythonic_ordered_map.h"
 
@@ -15,6 +15,7 @@ void test_compile_ordered_map()
 	o.insert(a, int(1));
 }
 
+/*
 void ordered_map_test_find()
 {
 	//_CrtSetBreakAlloc(178);
@@ -32,7 +33,7 @@ void ordered_map_test_find()
 	 1	5	7	    
 	 1	5	7	8   -
 	 */
-
+/*
 	node * cur = o.head;
 	o.head->next[0]->free();
 	node * max = node::create_max(0);
@@ -73,6 +74,7 @@ void ordered_map_test_find()
 	t.expected() << true;
 	t.compare();
 }
+*/
 
 void ordered_map_test_insert()
 {
@@ -88,10 +90,10 @@ void ordered_map_test_insert()
 
 		for (auto x : o)
 		{
-			t.test() << x.first << x.second;
+			t.test() << x;
 		}
 
-		t.expected() << "011223";
+		t.expected() << "012";
 
 		t.compare();
 	}
@@ -103,10 +105,10 @@ void ordered_map_test_insert()
 		o.insert(2, "leatherman");
 		for (auto x : o)
 		{
-			t.test() << x.first << x.second;
+			t.test() << x;
 		}
 
-		t.expected() << "0fuck1you2leatherman";
+		t.expected() << "012";
 		t.compare();
 	}
 }

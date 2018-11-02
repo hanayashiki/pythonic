@@ -27,6 +27,10 @@ void list_test_init()
 		{
 			t.test() << x.as<std::string>() << "; ";
 		}
+		else
+		{
+			t.test() << "unk; ";
+		}
 	}
 
 	t.expected() << "1; 2; abc; efg; ";

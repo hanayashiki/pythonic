@@ -31,6 +31,8 @@ namespace std
 
 namespace pythonic
 {
+	struct init_elem;
+
 	class str : public container
 	{
 	private:
@@ -38,32 +40,16 @@ namespace pythonic
 		std::string content;
 	public:
 
-		explicit str(any c)
-			: content(to_string(c))
-		{
-		}
+		inline str(init_elem e);
 
 		str()
 		{
 		}
 
-		str capitalize()
-		{
-			return str("");
-		}
+		inline str capitalize();
 
 		template<typename Iterable>
-		str join(const Iterable & iter)
-		{
-			// std::cerr << "Use join" << std::endl;
-			std::string s;
-			for (const auto & x : iter)
-			{
-				s += str(x).get_content();
-				s += get_content();
-			}
-			return str(s.substr(0, s.length() - len(*this)));
-		}
+		inline str join(const Iterable & iter);
 
 		/* Implements __equal__ */
 		virtual bool __equal__(const container & container) const noexcept override
@@ -85,29 +71,16 @@ namespace pythonic
 		}
 
 		/* Implements __str__ */
-		virtual str __str__() const noexcept override
-		{
-			return *this;
-		}
+		inline virtual str __str__() const noexcept override;
 
-		str operator + (const str & b)
-		{
-			return str(content + b.content);
-		}
+		inline str operator + (const str & b);
+		inline str operator += (const str & b) { return *this + b; }
 
 		auto & get_content() { return content; }
-
 		const auto & get_content() const { return content; }
 
-		virtual const_iterator begin() const noexcept
-		{
-			return get_iter(content.begin());
-		}
-
-		virtual const_iterator end() const noexcept
-		{
-			return get_iter(content.end());
-		}
+		virtual const_iterator begin() const noexcept { return get_iter(content.begin()); }
+		virtual const_iterator end() const noexcept { return get_iter(content.end()); }
 
 	private:
 		const_iterator get_iter(const std::string::const_iterator & tg) const
@@ -133,19 +106,16 @@ namespace pythonic
 			return match(
 				any,
 				BASIC_TYPES_LIST(TO_STRING)
-				[=](const pythonic::any & t) {
-				return t.get_cont()->__str__().get_content();
-			});
+				[=](const pythonic::any & t) { return t.get_cont()->__str__().get_content(); });
 		}
 	};
-
 }
 
 namespace std
 {
 
 	inline
-	ostream& operator<<(ostream& os, const pythonic::str& s)
+	ostream& operator << (ostream& os, const pythonic::str& s)
 	{
 		os << s.get_content();
 		return os;

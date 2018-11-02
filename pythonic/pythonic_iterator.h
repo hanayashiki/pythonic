@@ -77,7 +77,7 @@ namespace pythonic
 			ContextPtr ptr(p_iter);
 
 			return iterator(
-				[](ContextPtr ptr) -> void { visitAs<Iter>(ptr)++; },
+				[](ContextPtr ptr) -> void { ++visitAs<Iter>(ptr); },
 				[](ContextPtr ptr, const iterator & that) -> bool { return visitAs<Iter>(ptr) != visitAs<Iter>(that.get_context()); },
 				[](ContextPtr ptr) -> elem_value & { return *visitAs<Iter>(ptr); },
 				ptr
@@ -108,7 +108,7 @@ namespace pythonic
 			Iter * p_iter = new Iter(iter);
 			ContextPtr ptr(p_iter);
 			return const_iterator(
-				[](ContextPtr ptr) -> void { visitAs<Iter>(ptr)++; },
+				[](ContextPtr ptr) -> void { ++visitAs<Iter>(ptr); },
 				[](ContextPtr ptr, const iterator & that) -> bool { return visitAs<Iter>(ptr) != visitAs<Iter>(that.get_context()); },
 				[](ContextPtr ptr) -> const elem_value & { return *visitAsConst<Iter>(ptr); },
 				ptr

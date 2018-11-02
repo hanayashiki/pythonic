@@ -163,6 +163,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="pythonic_dict_test.cpp" />
     <ClCompile Include="pythonic_list_test.cpp" />
     <ClCompile Include="pythonic_list_match.cpp" />
     <ClCompile Include="pythonic_ordered_map_test.cpp" />
