@@ -52,7 +52,7 @@ namespace pythonic
 			//	assert(this->__len__() > 0);
 		}
 
-		list & operator = (list & l)
+		list & operator = (const list & l)
 		{
 			//self_id = l.self_id;
 			content = l.content;
@@ -64,14 +64,9 @@ namespace pythonic
 			content = std::move(l.content);
 		}
 
-		explicit list(const container_t & c)
+		explicit list(container_t c)
 		{
-			content = c;
-		}
-
-		explicit list(const container_t && c)
-		{
-			content = c;
+			content = std::move(c);
 		}
 
 		list()
@@ -252,8 +247,8 @@ namespace pythonic
 				content.push_back(elem.elem);
 				break;
 			case init_elem::List:
-				content.push_back(elem_t(new list(
-					std::move(elem.l))));
+				auto ptr = new list(std::move(elem.l));
+				content.push_back(elem_t(ptr));
 				break;
 			}
 		}

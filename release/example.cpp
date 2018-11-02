@@ -1,5 +1,6 @@
 #include "pythonic.h"
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 
 struct F
@@ -34,6 +35,15 @@ void Fuck2(F && f)
 	std::cout << "Fuck 2 called" << std::endl;
 }
 
+void Fuck3(const F & f)
+{
+	std::cout << "Fuck 3 called" << std::endl;
+}
+
+void Fuck4(const int & a)
+{
+	std::cout << "Fuck 4 called" << std::endl;
+}
 
 int main()
 {
@@ -43,8 +53,19 @@ int main()
 		list{ 1, "2", 3, 
 			list{ "fuck", "you", "leatherman" } } });
 
-	std::cout << str(l);
+	std::cout << str(l) << std::endl;
+
+	list l2({ "I", "am", "chinese " });
+
+	std::cout << str("|").join(l2) << std::endl;
 
 	std::cin.get();
+
+	std::unordered_map<int, int> map;
+	map.at(3);
+
+	Fuck3(F());
+	Fuck4(4);
+
 	return 0;
 }

@@ -47,6 +47,11 @@ namespace pythonic
 		{
 		}
 
+		str capitalize()
+		{
+			return str("");
+		}
+
 		template<typename Iterable>
 		str join(const Iterable & iter)
 		{

@@ -156,6 +156,7 @@
     <ClInclude Include="pythonic.h" />
     <ClInclude Include="pythonic_basic_types.h" />
     <ClInclude Include="pythonic_container.h" />
+    <ClInclude Include="pythonic_ordered_map.h" />
     <ClInclude Include="pythonic_elem_value.h" />
     <ClInclude Include="pythonic_iterator.h" />
     <ClInclude Include="pythonic_list.h" />

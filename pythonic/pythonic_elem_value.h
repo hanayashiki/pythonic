@@ -34,6 +34,10 @@ namespace pythonic
 			cont = std::shared_ptr<container>(reinterpret_cast<container*>(c));
 		}
 
+		~elem_value()
+		{
+		}
+
 		template<typename T>
 		inline T as() const
 		{
@@ -53,19 +57,19 @@ namespace pythonic
 		}
 
 		template<typename T>
-		inline T asMut()
+		inline T as_mut()
 		{
 			return std::any_cast<T>(this->value);
 		}
 
 		template<>
-		inline any asMut<any>()
+		inline any as_mut<any>()
 		{
 			return *this;
 		}
 
 		template<>
-		inline const any & asMut<const any &>()
+		inline const any & as_mut<const any &>()
 		{
 			return *this;
 		}

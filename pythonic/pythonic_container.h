@@ -26,6 +26,8 @@ namespace pythonic
 		virtual const_iterator begin() const noexcept = 0;
 		virtual const_iterator end() const noexcept = 0;
 
+		virtual ~container() {}
+
 		bool operator == (const container & container) const
 		{
 			return __equal__(container);

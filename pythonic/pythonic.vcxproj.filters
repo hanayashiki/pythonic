@@ -42,6 +42,9 @@
     <ClInclude Include="pythonic_basic_types.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="pythonic_ordered_map.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dummy.cpp">

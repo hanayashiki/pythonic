@@ -137,3 +137,11 @@ void list_test_slice()
 	t.expected() << true;
 	t.compare();
 }
+
+void list_leak_test()
+{
+	using namespace pythonic;
+
+	list another({ 1, 2, 3 });
+	list yet_another({ 1, 2, 3, another });
+}
