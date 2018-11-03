@@ -6,7 +6,7 @@ C++ toy APIs that simulate python
 This is a header-only library to boost your programming with some python-like apis.
 Just copy [pythonic.h](https://github.com/hanayashiki/pythonic/blob/master/release/pythonic.h) to your content and
 
-```
+```cpp
 #include "pch.h"
 #include "../release/pythonic.h" // include the header, best if included in the precompiled header
 #include <iostream>
