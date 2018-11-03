@@ -99,7 +99,7 @@ namespace pythonic
 			);
 		}
 
-#define TO_STRING(type) [](type a){ return std::to_string(a); }
+#define TO_STRING(type) [](type a){ return std::to_string(a); },
 
 		_NODISCARD static inline std::string to_string(const pythonic::any & any)
 		{

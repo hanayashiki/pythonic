@@ -116,13 +116,13 @@ namespace pythonic
 		{
 			if (mark == MinMaxMark::None)
 			{
-				std::cerr << "dtor called" << std::endl;
+				PYC_DEBUG << "dtor called" << std::endl;
 				this->~ordered_map_node();
 			}
 			else
 			{
-				std::cerr << "mark: " << int(mark);
-				std::cerr << ", dtor not called" << std::endl;
+				PYC_DEBUG << "mark: " << int(mark);
+				PYC_DEBUG << ", dtor not called" << std::endl;
 			}
 			::free(this);
 		}

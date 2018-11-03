@@ -16,7 +16,7 @@ namespace pythonic
 	{
 		str res("{");
 		bool first = true;
-		std::cerr << "dict size: " << content.size();
+		PYC_DEBUG << "dict size: " << content.size();
 		if (content.size() > 0)
 		{
 			res = res + str((*(content.items().begin())).first) + str(": ") + str((*(content.items().begin())).second);

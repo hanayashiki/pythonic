@@ -389,28 +389,105 @@ namespace pythonic
 #include <any>
 #include <iostream>
 #include <typeinfo>
+#include <typeindex>
 #include <string>
 
+#pragma once
+
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <cctype>
+
+#define PYC_LEVEL_VERBOSE 0
+#define PYC_LEVEL_DEBUG 1
+#define PYC_LEVEL_INFO 2
+#define PYC_LEVEL_ERR 3
+#define PYC_LEVEL_FATAL 4
+
+#define FILTER_LEVEL 0
+
+#define _PYC_LOG(level, levelName) if (level >= CldLog::filterLevel) std::wcerr << "[" << levelName << "] " << __FUNCTION__ << "@[" << \
+			CldLog::GetFilename(__FILE__).c_str() << ", " << __LINE__ << "] "
+
+#define PYC_INFO _PYC_LOG(PYC_LEVEL_INFO, "INFO")
+
+#define PYC_DEBUG _PYC_LOG(PYC_LEVEL_DEBUG, "DEBUG")
+
+#define PYC_WARN _PYC_LOG(PYC_LEVEL_INFO, "WARN")
+#define PYC_ERROR _PYC_LOG(PYC_LEVEL_ERR, "ERROR")
+#define PYC_FATAL _PYC_LOG(PYC_LEVEL_FATAL, "FATAL")
+
+#define LOG_EXPR(x) #x << L" = " << (x) 
+
+namespace CldLog
+{
+	namespace FilterLevel
+	{
+		enum FilterLevel
+		{
+			Verbose = PYC_LEVEL_VERBOSE,
+			Debug = PYC_LEVEL_DEBUG,
+			Info = PYC_LEVEL_INFO,
+			Err = PYC_LEVEL_ERR,
+			Fatal = PYC_LEVEL_FATAL
+		};
+	}
+
+	static inline FilterLevel::FilterLevel filterLevel = FilterLevel::Err;
+
+	static inline void SetFilterLevel(FilterLevel::FilterLevel level)
+	{
+		filterLevel = level;
+	}
+
+	static inline std::string Now() {
+		time_t now = time(0);
+		char buf[1024];
+		auto e = ctime_s(buf, sizeof(buf), &now);
+		std::string date = buf;
+		for (int i = date.length() - 1; i >= 0; i--) {
+			if (std::isspace(date[i])) {
+				date.pop_back();
+			}
+			else {
+				return date;
+			}
+		}
+	}
+
+	static inline std::string GetFilename(std::string path) {
+		int i;
+		for (i = path.length() - 1; i >= 0; i--) {
+			if (path[i] == '/' || path[i] == '\\') {
+				break;
+			}
+		}
+		return path.substr(i + 1);
+	}
+}
 #pragma once
 
 #include <string>
 
 #define BASIC_TYPES_LIST(B)	\
-	B(int8_t), 			\
-	B(int16_t),			\
-	B(int32_t),			\
-	B(int64_t),			\
-	B(uint16_t),		\
-	B(uint32_t),		\
-	B(uint32_t),		\
-	B(uint64_t),		\
-	B(char), 			\
-	B(char16_t),		\
-	B(char32_t),		\
-	B(wchar_t),			\
-	B(char*), 			\
-	B(const char*), 	\
-	B(std::string),		\
+	B(int8_t) 			\
+	B(int16_t)			\
+	B(int32_t)			\
+	B(int64_t)			\
+	B(uint16_t)			\
+	B(uint32_t)			\
+	B(uint32_t)			\
+	B(uint64_t)			\
+	B(char) 			\
+	B(char16_t)			\
+	B(char32_t)			\
+	B(wchar_t)			\
+	B(char*) 			\
+	B(const char*) 		\
+	B(std::string)		\
 
 
 
@@ -429,12 +506,12 @@ namespace pythonic
 		elem_value(Args... args) :
 			value(std::forward<Args>(args)...)
 		{
-			std::cerr << "elem_value Use any initializer" << std::endl;
+			PYC_DEBUG << "elem_value Use any initializer" << std::endl;
 		}
 		
 		elem_value(container * c)
 		{
-			std::cerr << "elem_value Use container initializer" << std::endl;
+			PYC_DEBUG << "elem_value Use container initializer" << std::endl;
 			cont = std::shared_ptr<container>(reinterpret_cast<container*>(c));
 		}
 
@@ -508,52 +585,62 @@ namespace pythonic
 			return true;
 		}
 
-		std::any & get_value()
-		{
-			return value;
-		}
+		std::any & get_value() { return value; }
+		std::type_index get_type_index() const { return std::type_index(value.type()); }
 
 		auto & get_cont() { return cont; }
 
 		const auto & get_cont() const { return cont; }
 
-#define COMPARE(type) [=](type t) { \
-			return as<type>() == that.as<type>(); \
-		}
-
-#define LESS(type) [=](type t) { \
-			return as<type>() < that.as<type>(); \
-		}
+#define EQUAL(type) if (that.isinstance<type>()) { return this->as<type>() == that.as<type>(); }
 
 		bool operator == (const elem_value & that) const noexcept
 		{
 			return match(
 				that,
-				BASIC_TYPES_LIST(COMPARE)
-
 				[=](const any & t)
 				{
-					return *cont == *(t.cont);
+					if (this->get_type_index() == that.get_type_index())
+					{
+						if (this->get_cont().get() != nullptr && that.get_cont().get() != nullptr)
+						{
+							return this->get_cont()->__equal__(*that.get_cont());
+						}
+						BASIC_TYPES_LIST(EQUAL)
+						return false;
+					}
+					else
+					{
+						return false;
+					}
 				}
 			);
 		}
+
+#define LESS(type) if (that.isinstance<type>()) { return as<type>() < that.as<type>(); }
 
 		bool operator < (const elem_value & that) const noexcept
 		{
 			return match(
 				that,
-				BASIC_TYPES_LIST(LESS)
 
 				[=](const any & t)
 				{
-					return false;
-					//return *cont < *(t.cont);
+					if (this->get_type_index() == that.get_type_index())
+					{
+						BASIC_TYPES_LIST(LESS)
+					}
+					else
+					{
+						return this->get_type_index() < that.get_type_index();
+					}
 				}
 			);
 		}
 	};
 
-#undef COMPARE
+#undef EQUAL
+#undef LESS
 }
 
 #pragma once
@@ -657,7 +744,7 @@ namespace pythonic
 			);
 		}
 
-#define TO_STRING(type) [](type a){ return std::to_string(a); }
+#define TO_STRING(type) [](type a){ return std::to_string(a); },
 
 		_NODISCARD static inline std::string to_string(const pythonic::any & any)
 		{
@@ -701,9 +788,9 @@ namespace pythonic
 			//self_id = l.self_id + 1000;
 			content = l.content;
 			/*
-			std::cerr << "list id: " << self_id << std::endl;
-			std::cerr << "source id: " << l.self_id << std::endl;
-			std::cerr << "list copied, len: " << this->__len__() << std::endl;
+			PYC_DEBUG << "list id: " << self_id << std::endl;
+			PYC_DEBUG << "source id: " << l.self_id << std::endl;
+			PYC_DEBUG << "list copied, len: " << this->__len__() << std::endl;
 			*/
 			//if (self_id > 1010)
 			//	assert(this->__len__() > 0);
@@ -713,9 +800,9 @@ namespace pythonic
 		{
 			//self_id = l.self_id + 1000;
 			content = std::move(l.content);
-			//std::cerr << "list id: " << self_id << std::endl;
-			//std::cerr << "source id: " << l.self_id << std::endl;
-			//std::cerr << "list moved, len: " << this->__len__() << std::endl;
+			//PYC_DEBUG << "list id: " << self_id << std::endl;
+			//PYC_DEBUG << "source id: " << l.self_id << std::endl;
+			//PYC_DEBUG << "list moved, len: " << this->__len__() << std::endl;
 			//if (self_id > 1010)
 			//	assert(this->__len__() > 0);
 		}
@@ -743,8 +830,8 @@ namespace pythonic
 
 		~list()
 		{
-			//std::cerr << "list id: " << self_id << std::endl;
-			//std::cerr << "list destroyed, len: " << this->__len__() << std::endl;
+			//PYC_DEBUG << "list id: " << self_id << std::endl;
+			//PYC_DEBUG << "list destroyed, len: " << this->__len__() << std::endl;
 		}
 
 		/* Implements __getitem__ */ // TODO: virtualize this func
@@ -867,6 +954,8 @@ namespace pythonic
 /* init_elem */
 #pragma once
 
+
+
 #pragma once
 
 
@@ -988,13 +1077,13 @@ namespace pythonic
 		{
 			if (mark == MinMaxMark::None)
 			{
-				std::cerr << "dtor called" << std::endl;
+				PYC_DEBUG << "dtor called" << std::endl;
 				this->~ordered_map_node();
 			}
 			else
 			{
-				std::cerr << "mark: " << int(mark);
-				std::cerr << ", dtor not called" << std::endl;
+				PYC_DEBUG << "mark: " << int(mark);
+				PYC_DEBUG << ", dtor not called" << std::endl;
 			}
 			::free(this);
 		}
@@ -1356,28 +1445,28 @@ namespace pythonic
 			init_elem(Any v) :
 			elem(v)
 		{
-			std::cerr << "use any initializer" << std::endl;
+			PYC_DEBUG << "use any initializer" << std::endl;
 		}
 
 		init_elem(list && l) :
 			elem((container*)new list(std::move(l)))
 		{
-			std::cerr << "use list initializer" << std::endl;
-			//std::cerr << "init list len" << l.__len__() << std::endl;
+			PYC_DEBUG << "use list initializer" << std::endl;
+			//PYC_DEBUG << "init list len" << l.__len__() << std::endl;
 		}
 
 		init_elem(const list & l) :
 			elem((container*)new list(l))
 		{
-			std::cerr << "use list initializer" << std::endl;
-			//std::cerr << "init list len" << l.__len__() << std::endl;
+			PYC_DEBUG << "use list initializer" << std::endl;
+			//PYC_DEBUG << "init list len" << l.__len__() << std::endl;
 		}
 
 		init_elem(dict && l) :
 			elem((container*)new dict(std::move(l)))
 		{
-			std::cerr << "use dict initializer" << std::endl;
-			//std::cerr << "init list len" << l.__len__() << std::endl;
+			PYC_DEBUG << "use dict initializer" << std::endl;
+			//PYC_DEBUG << "init list len" << l.__len__() << std::endl;
 		}
 
 	};
@@ -1399,8 +1488,8 @@ namespace pythonic
 
 	str list::__str__() const noexcept
 	{
-		//std::cerr << "list id: " << self_id << std::endl;
-		//std::cerr << "__str__(): this len: " << this->__len__() << std::endl;
+		//PYC_DEBUG << "list id: " << self_id << std::endl;
+		//PYC_DEBUG << "__str__(): this len: " << this->__len__() << std::endl;
 		return str("[") + str(", ").join(*this) + str("]");
 	}
 }
@@ -1422,7 +1511,7 @@ namespace pythonic
 	{
 		str res("{");
 		bool first = true;
-		std::cerr << "dict size: " << content.size();
+		PYC_DEBUG << "dict size: " << content.size();
 		if (content.size() > 0)
 		{
 			res = res + str((*(content.items().begin())).first) + str(": ") + str((*(content.items().begin())).second);
@@ -1462,7 +1551,7 @@ namespace pythonic
 	template<typename Iterable>
 	str str::join(const Iterable & iter)
 	{
-		// std::cerr << "Use join" << std::endl;
+		// PYC_DEBUG << "Use join" << std::endl;
 		std::string s;
 		for (const auto & x : iter)
 		{

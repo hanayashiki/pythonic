@@ -14,8 +14,8 @@ namespace pythonic
 
 	str list::__str__() const noexcept
 	{
-		//std::cerr << "list id: " << self_id << std::endl;
-		//std::cerr << "__str__(): this len: " << this->__len__() << std::endl;
+		//PYC_DEBUG << "list id: " << self_id << std::endl;
+		//PYC_DEBUG << "__str__(): this len: " << this->__len__() << std::endl;
 		return str("[") + str(", ").join(*this) + str("]");
 	}
 }

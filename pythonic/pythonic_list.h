@@ -33,9 +33,9 @@ namespace pythonic
 			//self_id = l.self_id + 1000;
 			content = l.content;
 			/*
-			std::cerr << "list id: " << self_id << std::endl;
-			std::cerr << "source id: " << l.self_id << std::endl;
-			std::cerr << "list copied, len: " << this->__len__() << std::endl;
+			PYC_DEBUG << "list id: " << self_id << std::endl;
+			PYC_DEBUG << "source id: " << l.self_id << std::endl;
+			PYC_DEBUG << "list copied, len: " << this->__len__() << std::endl;
 			*/
 			//if (self_id > 1010)
 			//	assert(this->__len__() > 0);
@@ -45,9 +45,9 @@ namespace pythonic
 		{
 			//self_id = l.self_id + 1000;
 			content = std::move(l.content);
-			//std::cerr << "list id: " << self_id << std::endl;
-			//std::cerr << "source id: " << l.self_id << std::endl;
-			//std::cerr << "list moved, len: " << this->__len__() << std::endl;
+			//PYC_DEBUG << "list id: " << self_id << std::endl;
+			//PYC_DEBUG << "source id: " << l.self_id << std::endl;
+			//PYC_DEBUG << "list moved, len: " << this->__len__() << std::endl;
 			//if (self_id > 1010)
 			//	assert(this->__len__() > 0);
 		}
@@ -75,8 +75,8 @@ namespace pythonic
 
 		~list()
 		{
-			//std::cerr << "list id: " << self_id << std::endl;
-			//std::cerr << "list destroyed, len: " << this->__len__() << std::endl;
+			//PYC_DEBUG << "list id: " << self_id << std::endl;
+			//PYC_DEBUG << "list destroyed, len: " << this->__len__() << std::endl;
 		}
 
 		/* Implements __getitem__ */ // TODO: virtualize this func

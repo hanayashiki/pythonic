@@ -2,8 +2,10 @@
 #include <any>
 #include <iostream>
 #include <typeinfo>
+#include <typeindex>
 #include <string>
 
+#include "log.h"
 #include "pythonic_basic_types.h"
 #include "pythonic_container.h"
 #include "pythonic_utils_match.h"
@@ -21,12 +23,12 @@ namespace pythonic
 		elem_value(Args... args) :
 			value(std::forward<Args>(args)...)
 		{
-			std::cerr << "elem_value Use any initializer" << std::endl;
+			PYC_DEBUG << "elem_value Use any initializer" << std::endl;
 		}
 		
 		elem_value(container * c)
 		{
-			std::cerr << "elem_value Use container initializer" << std::endl;
+			PYC_DEBUG << "elem_value Use container initializer" << std::endl;
 			cont = std::shared_ptr<container>(reinterpret_cast<container*>(c));
 		}
 
@@ -100,50 +102,60 @@ namespace pythonic
 			return true;
 		}
 
-		std::any & get_value()
-		{
-			return value;
-		}
+		std::any & get_value() { return value; }
+		std::type_index get_type_index() const { return std::type_index(value.type()); }
 
 		auto & get_cont() { return cont; }
 
 		const auto & get_cont() const { return cont; }
 
-#define COMPARE(type) [=](type t) { \
-			return as<type>() == that.as<type>(); \
-		}
-
-#define LESS(type) [=](type t) { \
-			return as<type>() < that.as<type>(); \
-		}
+#define EQUAL(type) if (that.isinstance<type>()) { return this->as<type>() == that.as<type>(); }
 
 		bool operator == (const elem_value & that) const noexcept
 		{
 			return match(
 				that,
-				BASIC_TYPES_LIST(COMPARE)
-
 				[=](const any & t)
 				{
-					return *cont == *(t.cont);
+					if (this->get_type_index() == that.get_type_index())
+					{
+						if (this->get_cont().get() != nullptr && that.get_cont().get() != nullptr)
+						{
+							return this->get_cont()->__equal__(*that.get_cont());
+						}
+						BASIC_TYPES_LIST(EQUAL)
+						return false;
+					}
+					else
+					{
+						return false;
+					}
 				}
 			);
 		}
+
+#define LESS(type) if (that.isinstance<type>()) { return as<type>() < that.as<type>(); }
 
 		bool operator < (const elem_value & that) const noexcept
 		{
 			return match(
 				that,
-				BASIC_TYPES_LIST(LESS)
 
 				[=](const any & t)
 				{
-					return false;
-					//return *cont < *(t.cont);
+					if (this->get_type_index() == that.get_type_index())
+					{
+						BASIC_TYPES_LIST(LESS)
+					}
+					else
+					{
+						return this->get_type_index() < that.get_type_index();
+					}
 				}
 			);
 		}
 	};
 
-#undef COMPARE
+#undef EQUAL
+#undef LESS
 }

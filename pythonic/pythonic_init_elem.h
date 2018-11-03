@@ -1,4 +1,6 @@
 #pragma once
+
+#include "log.h"
 #include "pythonic_list.h"
 #include "pythonic_dict.h"
 
@@ -15,28 +17,28 @@ namespace pythonic
 			init_elem(Any v) :
 			elem(v)
 		{
-			std::cerr << "use any initializer" << std::endl;
+			PYC_DEBUG << "use any initializer" << std::endl;
 		}
 
 		init_elem(list && l) :
 			elem((container*)new list(std::move(l)))
 		{
-			std::cerr << "use list initializer" << std::endl;
-			//std::cerr << "init list len" << l.__len__() << std::endl;
+			PYC_DEBUG << "use list initializer" << std::endl;
+			//PYC_DEBUG << "init list len" << l.__len__() << std::endl;
 		}
 
 		init_elem(const list & l) :
 			elem((container*)new list(l))
 		{
-			std::cerr << "use list initializer" << std::endl;
-			//std::cerr << "init list len" << l.__len__() << std::endl;
+			PYC_DEBUG << "use list initializer" << std::endl;
+			//PYC_DEBUG << "init list len" << l.__len__() << std::endl;
 		}
 
 		init_elem(dict && l) :
 			elem((container*)new dict(std::move(l)))
 		{
-			std::cerr << "use dict initializer" << std::endl;
-			//std::cerr << "init list len" << l.__len__() << std::endl;
+			PYC_DEBUG << "use dict initializer" << std::endl;
+			//PYC_DEBUG << "init list len" << l.__len__() << std::endl;
 		}
 
 	};

@@ -31,7 +31,7 @@ def get_header_combined(filename : str):
     for header in included_headers:
         if header not in pragma_once_files:
             combined_content = get_header_combined(header)
-            content = re.sub(r'#include\s?"(%s)"' % header, combined_content, content)
+            content = re.sub(r'#include\s?"(%s)"' % header, lambda _: combined_content, content)
         else:
             content = re.sub(r'#include\s?"(%s)"' % header, '', content)
     return content
@@ -52,6 +52,6 @@ content = get_header_combined(args.target)
 os.chdir(old_path)
 o = open(args.output, 'w', encoding='utf-8')
 
-print(content, file=o, end='')
+o.write(content)
 o.close()
 

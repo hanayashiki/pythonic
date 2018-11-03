@@ -92,7 +92,6 @@ void list_test_equal()
 
 	my_list2.extend({ 1, 2, 3 });
 
-	t.clear();
 	t.test() << (my_list1 == my_list2);
 	t.expected() << false;
 
@@ -101,11 +100,16 @@ void list_test_equal()
 	list my_list3({ 1, 2, 3, list({1, 2, 3}) });
 	list my_list4({ 1, 2, 3, list{1, 2, 3} });
 
-	t.clear();
 	t.test() << (my_list3 == my_list4);
 	t.expected() << true;
 	t.compare();
 
+	list my_list5({ "1", 2, 3, list({1, 2, 3}) });
+	list my_list6({ 1, 2, 3, list{1, 2, 3} });
+
+	t.test() << (my_list5 == my_list6);
+	t.expected() << false;
+	t.compare();
 }
 
 void list_test_insert()

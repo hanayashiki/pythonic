@@ -18,7 +18,7 @@ namespace pythonic
 	template<typename Iterable>
 	str str::join(const Iterable & iter)
 	{
-		// std::cerr << "Use join" << std::endl;
+		// PYC_DEBUG << "Use join" << std::endl;
 		std::string s;
 		for (const auto & x : iter)
 		{
